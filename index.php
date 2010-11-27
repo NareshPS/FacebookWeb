@@ -5,7 +5,7 @@
 // Name: SysSecProject
 // 
 
-require_once 'facebook/src/facebook.php';
+require_once 'Facebook/src/facebook.php';
 
 // Create our Application instance.
 $facebook = new Facebook(array(
@@ -13,6 +13,18 @@ $facebook = new Facebook(array(
 	'secret' => '7f9207e5b3bbeaae75b234eb1d47dca8',
 	'cookie' => true,
 ));
+
+/** DB for random numbers **/
+try {
+	$db=new SQLiteDatabase("db.sqlite",0666,$error); //a database to store the randomnumber
+}
+catch (Exception $e){
+	die($error);
+}
+
+$db->query("BEGIN;
+                CREATE TABLE users(uid CHAR(20) PRIMARY KEY, key_type CHAR(255), key_value CHAR(255), expiry INTEGER);
+        COMMIT;");
 
 // We may or may not have this data based on a $_GET or $_COOKIE based session.
 //
@@ -92,6 +104,22 @@ else
 **/
 	$randomToken = rand(1, getrandmax());
 	setcookie("randomToken", $randomToken, $expire=time()+60);
+
+/********************************************************************
+	Insert random key and the user info in to SQLite database table
+**********************************************************************/
+$db->query("BEGIN;
+		INSERT INTO users(uid,key_type,key_value,expiry) VALUES($uid,"random_token",$randomToken,$expire);
+	COMMIT;");
+
+//fetch the data 
+$result = $db->query("SELECT * FROM users");
+while($result->valid()){
+	$row = $result->current();
+	print_r($row);
+	$result->next;
+	}
+/***********************************************************/
 ?>
 <pre><?php print_r($session); ?></pre>
 
