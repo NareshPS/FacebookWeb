@@ -109,7 +109,7 @@ else
 	Insert random key and the user info in to SQLite database table
 **********************************************************************/
 $db->query("BEGIN;
-		INSERT INTO users(uid,key_type,key_value,expiry) VALUES($uid,"random_token",$randomToken,$expire);
+		INSERT INTO users(uid,key_type,key_value,expiry) VALUES($uid,'random_token',$randomToken,$expire);
 	COMMIT;");
 
 //fetch the data 
