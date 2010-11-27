@@ -16,15 +16,14 @@ $facebook = new Facebook(array(
 
 /** DB for random numbers **/
 try {
-	$db=new SQLiteDatabase("db.sqlite",0666,$error); //a database to store the randomnumber
+	//sqlite_query($db, 'CREATE TABLE records ( uid VARCHAR(20) PRIMARY KEY, access_token VARCHAR(20),session_key VARCHAR(20),expiry INTEGER)');
+	$db = sqlite_open("db.sqlite",0666,$error);
 }
 catch (Exception $e){
 	die($error);
 }
 
-$db->query("BEGIN;
-                CREATE TABLE users(uid CHAR(20) PRIMARY KEY, key_type CHAR(255), key_value CHAR(255), expiry INTEGER);
-        COMMIT;");
+
 
 // We may or may not have this data based on a $_GET or $_COOKIE based session.
 //
@@ -42,6 +41,7 @@ if ($session)
 	try 
 	{
 		$uid = $facebook->getUser();
+		$access_token = $facebook->getAccessToken();
 		$me = $facebook->api('/me');
 	} catch (FacebookApiException $e) 
 	{
@@ -108,17 +108,14 @@ else
 /********************************************************************
 	Insert random key and the user info in to SQLite database table
 **********************************************************************/
-$db->query("BEGIN;
-		INSERT INTO users(uid,key_type,key_value,expiry) VALUES($uid,'random_token',$randomToken,$expire);
-	COMMIT;");
+sqlite_query($db, "INSERT INTO records VALUES ($uid,$randomToken,$access_token,$session,$expire)");
+//sqlite_query($db, "UPDATE records set expiry = '55' where uid = 'saf1'");
 
-//fetch the data 
-$result = $db->query("SELECT * FROM users");
-while($result->valid()){
-	$row = $result->current();
-	print_r($row);
-	$result->next;
-	}
+$result = sqlite_query($db, 'select * from records');
+while ($entry = sqlite_fetch_array($result)) {
+                echo ' ';
+                echo ' Uid: ' . $entry['uid'] . '  number: ' . $entry['expiry'];
+        }
 /***********************************************************/
 ?>
 <pre><?php print_r($session); ?></pre>
