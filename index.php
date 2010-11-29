@@ -7,6 +7,7 @@
 
 require_once 'Facebook/src/facebook.php';
 
+$db_path	= 'C:/Stuffs/My Documents/My Dropbox/Workspace/pyDCHub/db/db.sqlite';
 // Create our Application instance.
 $facebook = new Facebook(array(
 	'appId'  => '154808361231346',
@@ -17,7 +18,7 @@ $facebook = new Facebook(array(
 /** DB for random numbers **/
 try {
 	//sqlite_query($db, 'CREATE TABLE records ( uid VARCHAR(20) PRIMARY KEY, access_token VARCHAR(20),session_key VARCHAR(20),expiry INTEGER)');
-	$db = sqlite_open("db.sqlite",0666,$error);
+	$db = sqlite_open($db_path,0666,$error);
 }
 catch (Exception $e){
 	die($error);
@@ -82,23 +83,9 @@ else
 		document.getElementById('fb-root').appendChild(e);
 	}());
 </script>
-<!-- Allows the user to login/logout //-->
-<?php if ($me): ?>
-	<a href="<?php echo $logoutUrl; ?>">
-		<img src="http://static.ak.fbcdn.net/rsrc.php/z2Y31/hash/cxrz4k7j.gif">
-	</a>
-<?php else: ?>
-<div>
-	Without using JavaScript &amp; XFBML:
-	<a href="<?php echo $loginUrl; ?>">
-		<img src="http://static.ak.fbcdn.net/rsrc.php/zB6N8/hash/4li2k73z.gif">
-	</a>
-</div>
-<?php endif ?>
 
 <h3>Session</h3>
-<?php if ($me): ?>
-<?php
+<?php if ($me):
 /**
  *	Set the cookie for this session
 **/
@@ -108,14 +95,28 @@ else
 /********************************************************************
 	Insert random key and the user info in to SQLite database table
 **********************************************************************/
-sqlite_query($db, "INSERT INTO records VALUES ($uid,$randomToken,$access_token,$session,$expire)");
-//sqlite_query($db, "UPDATE records set expiry = '55' where uid = 'saf1'");
+	print $uid;
+	
+	/**
+	 * Delete existing entries.
+	 **/
+	 
+	$result = sqlite_query($db, "DELETE FROM records where uid=$uid");
 
-$result = sqlite_query($db, 'select * from records');
-while ($entry = sqlite_fetch_array($result)) {
-                echo ' ';
-                echo ' Uid: ' . $entry['uid'] . '  number: ' . $entry['expiry'];
-        }
+	$result	= sqlite_query($db, "INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
+	
+	if($result)
+	{	
+		$result = sqlite_query($db, 'select * from records');
+		while ($entry = sqlite_fetch_array($result)) {
+					echo ' ';
+					echo ' Uid: ' . $entry['uid'] . '  number: ' . $entry['expiry'];
+			}
+	}
+	else
+	{
+		die("Error");
+	}
 /***********************************************************/
 ?>
 <pre><?php print_r($session); ?></pre>
@@ -127,5 +128,13 @@ while ($entry = sqlite_fetch_array($result)) {
 <h3>Your User Object</h3>
 <pre><?php print_r($me); ?></pre>
 <?php else: ?>
-	<strong><em>You are not Connected.</em></strong>
+	<strong>
+		<em>You are not Connected.</em>
+		<fb:login-button perms="email"></fb:login-button>
+		<div>
+			<a href="<?php echo $loginUrl; ?>">
+			<img src="http://static.ak.fbcdn.net/rsrc.php/zB6N8/hash/4li2k73z.gif">
+			</a>
+		</div>
+	</strong>
 <?php endif ?>
