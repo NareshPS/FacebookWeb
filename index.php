@@ -6,8 +6,15 @@
 // 
 
 require_once 'Facebook/src/facebook.php';
+class recordsDB extends SQLite3
+{
+        function __construct()
+        {
+               // $this->open('C:/Stuffs/My Documents/My Dropbox/Workspace/pyDCHub/db/db.sqlite');
+		$this->open('db.sqlite');
+        }
+}
 
-$db_path	= 'C:/Stuffs/My Documents/My Dropbox/Workspace/pyDCHub/db/db.sqlite';
 // Create our Application instance.
 $facebook = new Facebook(array(
 	'appId'  => '154808361231346',
@@ -17,15 +24,13 @@ $facebook = new Facebook(array(
 
 /** DB for random numbers **/
 try {
-	//sqlite_query($db, 'CREATE TABLE records ( uid VARCHAR(20) PRIMARY KEY, access_token VARCHAR(20),session_key VARCHAR(20),expiry INTEGER)');
-	$db = sqlite_open($db_path,0666,$error);
+	//$db->execute('CREATE TABLE records ( uid VARCHAR(20) PRIMARY KEY, access_token VARCHAR(20),session_key VARCHAR(20),expiry INTEGER)');
+	$db = new recordsDB(); // opens a new DB
+	
 }
 catch (Exception $e){
-	die($error);
+	die($e);
 }
-
-
-
 // We may or may not have this data based on a $_GET or $_COOKIE based session.
 //
 // If we get a session here, it means we found a correctly signed session using
@@ -91,24 +96,22 @@ else
 **/
 	$randomToken = rand(1, getrandmax());
 	setcookie("randomToken", $randomToken, $expire=time()+60);
-
 /********************************************************************
 	Insert random key and the user info in to SQLite database table
 **********************************************************************/
 	print $uid;
-	
 	/**
 	 * Delete existing entries.
 	 **/
-	 
-	$result = sqlite_query($db, "DELETE FROM records where uid=$uid");
-
-	$result	= sqlite_query($db, "INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
-	
+	//$result = sqlite_query($db, "DELETE FROM records where uid=$uid");
+	$result = $db->execute("DELETE FROM records where uid=$uid");
+	//$result	= sqlite_query($db, "INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
+	$result = $db->execute("INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
 	if($result)
 	{	
-		$result = sqlite_query($db, 'select * from records');
-		while ($entry = sqlite_fetch_array($result)) {
+		//$result = sqlite_query($db, 'select * from records');
+		$result = $db->query('SELECT * from records');
+		while ($entry = $result->fetchArray()) {
 					echo ' ';
 					echo ' Uid: ' . $entry['uid'] . '  number: ' . $entry['expiry'];
 			}
