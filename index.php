@@ -10,8 +10,7 @@ class recordsDB extends SQLite3
 {
         function __construct()
         {
-               // $this->open('C:/Stuffs/My Documents/My Dropbox/Workspace/pyDCHub/db/db.sqlite');
-		$this->open('db.sqlite');
+			$this->open('db.sqlite');
         }
 }
 
@@ -96,6 +95,9 @@ else
 **/
 	$randomToken = rand(1, getrandmax());
 	setcookie("randomToken", $randomToken, $expire=time()+60);
+	print "randomToken: ";
+	print $randomToken;
+	print "\n";
 /********************************************************************
 	Insert random key and the user info in to SQLite database table
 **********************************************************************/
@@ -104,9 +106,9 @@ else
 	 * Delete existing entries.
 	 **/
 	//$result = sqlite_query($db, "DELETE FROM records where uid=$uid");
-	$result = $db->execute("DELETE FROM records where uid=$uid");
+	$result = $db->query("DELETE FROM records where uid=$uid");
 	//$result	= sqlite_query($db, "INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
-	$result = $db->execute("INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
+	$result = $db->query("INSERT INTO records VALUES ('$uid', '$randomToken', '$access_token', '$session', '$expire')");
 	if($result)
 	{	
 		//$result = sqlite_query($db, 'select * from records');
